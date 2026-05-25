@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8efe3"/>
+      <stop offset="100%" stop-color="#efe5d5"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <circle cx="620" cy="180" r="110" fill="#ffffff" fill-opacity="0.55"/>
+  <rect x="130" y="190" width="540" height="620" rx="70" fill="#fffaf4"/>
+  <text x="400" y="450" text-anchor="middle" font-family="Georgia, serif" font-size="56" fill="#6b5b4b">VIDHZZ</text>
+  <text x="400" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" letter-spacing="8" fill="#b18957">PRODUCT</text>
+</svg>

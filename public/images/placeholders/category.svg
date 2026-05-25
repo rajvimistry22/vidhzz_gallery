@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7efe4"/>
+      <stop offset="100%" stop-color="#f1e4d2"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <path d="M115 450c70-100 170-150 295-150 122 0 207 48 275 150" fill="none" stroke="#c4954f" stroke-width="18" stroke-linecap="round"/>
+  <text x="400" y="250" text-anchor="middle" font-family="Georgia, serif" font-size="50" fill="#4a3f35">Vidhzz</text>
+  <text x="400" y="312" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" letter-spacing="6" fill="#9a7a4f">CATEGORY</text>
+</svg>
