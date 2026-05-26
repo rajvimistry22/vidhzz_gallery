@@ -122,4 +122,34 @@ class CategoryController extends Controller
             ]);
         }
     }
+
+    public function deleteImage(Category $category)
+    {
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+            $category->update(['image' => null]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteBanner(Category $category)
+    {
+        if ($category->banner_image) {
+            Storage::disk('public')->delete($category->banner_image);
+            $category->update(['banner_image' => null]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteGalleryImage(CategoryImage $image)
+    {
+        if ($image->image_path) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+        $image->delete();
+
+        return response()->json(['success' => true]);
+    }
 }

@@ -242,6 +242,12 @@
                     <span style="color: #78716c;">Shipping</span>
                     <span style="font-weight: 600;">Rs. {{ number_format($order->shipping_charge, 0) }}</span>
                 </div>
+                @if ($order->tax > 0)
+                    <div class="totals-row">
+                        <span style="color: #78716c;">Tax (3% GST)</span>
+                        <span style="font-weight: 600;">Rs. {{ number_format($order->tax, 0) }}</span>
+                    </div>
+                @endif
                 <div class="totals-row grand-total">
                     <span>Total Amount</span>
                     <span>Rs. {{ number_format($order->total, 0) }}</span>
@@ -249,8 +255,8 @@
             </div>
 
             <div class="address-grid">
-                <div class="address-col">
-                    <div class="address-title">Shipping Address</div>
+                <div class="address-col" style="width: 100%;">
+                    <div class="address-title">Address</div>
                     <div class="address-text">
                         <strong>{{ $order->shipping_name }}</strong><br>
                         Phone: {{ $order->shipping_phone }}<br>
@@ -259,17 +265,8 @@
                         {{ $order->shipping_country }}
                     </div>
                 </div>
-                <div class="address-col" style="padding-left: 16px;">
-                    <div class="address-title">Billing Address</div>
-                    <div class="address-text">
-                        <strong>{{ $order->billing_name }}</strong><br>
-                        Phone: {{ $order->billing_phone }}<br>
-                        {{ $order->billing_address }}<br>
-                        {{ $order->billing_city }}, {{ $order->billing_state }} - {{ $order->billing_pincode }}<br>
-                        {{ $order->billing_country }}
-                    </div>
-                </div>
             </div>
+
             
             @if ($order->notes)
                 <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e7e5e4;">

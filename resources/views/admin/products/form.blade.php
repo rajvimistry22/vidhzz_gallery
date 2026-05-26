@@ -31,19 +31,42 @@
     </div>
     <div>
         <label class="label">Primary image</label>
-        <input type="file" name="primary_image_file" accept="image/*" class="input">
+        <input type="file" id="primary_image_input" name="primary_image_file" accept="image/*" class="input" onchange="previewSingleImage(this, 'primary_image_preview_container', 'primary_image_preview_img', 'existing_primary_image_container')">
+        
+        {{-- Selected file preview --}}
+        <div class="mt-3 relative inline-block group" id="primary_image_preview_container" style="display: none;">
+            <img id="primary_image_preview_img" src="" class="h-24 w-24 rounded-xl object-cover border border-stone-200 shadow-sm">
+            <button type="button" class="absolute -top-2 -right-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1.5 shadow-md flex items-center justify-center transition" onclick="clearSelectedFile('primary_image_input', 'primary_image_preview_container', 'existing_primary_image_container')">
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        {{-- Existing image preview --}}
         @if (!empty($imagePath))
-            <img src="{{ asset('storage/' . $imagePath) }}" alt="{{ $product->name }}" class="mt-3 h-24 w-24 rounded-xl object-cover">
+            <div class="mt-3 relative inline-block group" id="existing_primary_image_container">
+                <img src="{{ asset('storage/' . $imagePath) }}" alt="{{ $product->name }}" class="h-24 w-24 rounded-xl object-cover border border-stone-200 shadow-sm">
+                <button type="button" class="absolute -top-2 -right-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1.5 shadow-md flex items-center justify-center transition" onclick="deleteExistingImage('{{ route('admin.products.delete-primary-image', $product) }}', 'existing_primary_image_container')">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            </div>
         @endif
     </div>
     <div class="lg:col-span-2">
         <label class="label">Gallery images</label>
-        <input type="file" name="gallery_image_files[]" accept="image/*" multiple class="input">
-        @if ($product->exists && $product->images->isNotEmpty())
+        <input type="file" id="product_gallery_input" name="gallery_image_files[]" accept="image/*" multiple class="input" onchange="previewMultipleImages(this, 'product_gallery_preview_container')">
+        
+        {{-- Selected gallery preview --}}
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4" id="product_gallery_preview_container"></div>
+
+        {{-- Existing gallery images --}}
+        @if ($product->exists && $product->images->where('is_primary', false)->isNotEmpty())
             <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                @foreach ($product->images as $image)
-                    <div class="overflow-hidden rounded-xl border border-stone-200 bg-stone-50 p-2">
+                @foreach ($product->images->where('is_primary', false) as $image)
+                    <div class="relative overflow-hidden rounded-xl border border-stone-200 bg-stone-50 p-2 group" id="existing_gallery_container_{{ $image->id }}">
                         <img src="{{ $image->url }}" alt="{{ $product->name }}" class="h-24 w-full rounded-lg object-cover">
+                        <button type="button" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1.5 shadow-md flex items-center justify-center transition opacity-0 group-hover:opacity-100 focus:opacity-100" onclick="deleteExistingImage('{{ route('admin.products.delete-gallery-image', $image->id) }}', 'existing_gallery_container_{{ $image->id }}')">
+                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
                     </div>
                 @endforeach
             </div>
@@ -116,3 +139,100 @@
         </label>
     </div>
 </div>
+
+<script>
+    function previewSingleImage(input, previewContainerId, previewImgId, existingContainerId) {
+        const previewContainer = document.getElementById(previewContainerId);
+        const previewImg = document.getElementById(previewImgId);
+        const existingContainer = document.getElementById(existingContainerId);
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'inline-block';
+                if (existingContainer) {
+                    existingContainer.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function clearSelectedFile(inputId, previewContainerId, existingContainerId) {
+        const input = document.getElementById(inputId);
+        const previewContainer = document.getElementById(previewContainerId);
+        const existingContainer = document.getElementById(existingContainerId);
+
+        input.value = '';
+        previewContainer.style.display = 'none';
+        if (existingContainer) {
+            existingContainer.style.display = 'inline-block';
+        }
+    }
+
+    function previewMultipleImages(input, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        if (input.files) {
+            Array.from(input.files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative overflow-hidden rounded-xl border border-stone-200 bg-stone-50 p-2 group';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="h-24 w-full rounded-lg object-cover">
+                        <button type="button" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1.5 shadow-md flex items-center justify-center transition" onclick="removeSelectedGalleryFile(this, ${index}, '${input.id}', '${containerId}')">
+                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+
+    function removeSelectedGalleryFile(buttonEl, index, inputId, containerId) {
+        const input = document.getElementById(inputId);
+        const dt = new DataTransfer();
+        const { files } = input;
+        
+        for (let i = 0; i < files.length; i++) {
+            if (i !== index) {
+                dt.items.add(files[i]);
+            }
+        }
+        
+        input.files = dt.files;
+        previewMultipleImages(input, containerId);
+    }
+
+    function deleteExistingImage(url, containerId) {
+        if (!confirm('Are you sure you want to delete this image permanently?')) {
+            return;
+        }
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const el = document.getElementById(containerId);
+                if (el) el.remove();
+            } else {
+                alert(data.message || 'Failed to delete image.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the image.');
+        });
+    }
+</script>

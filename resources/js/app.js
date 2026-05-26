@@ -6,6 +6,188 @@ window.Alpine = Alpine;
 Alpine.data('siteLayout', () => ({
     mobileMenuOpen: false,
     copyBilling: true,
+    cartOpen: false,
+    cartHtml: '',
+    loadingCart: false,
+
+    init() {
+        // Intercept any Add to Cart form submission to handle it via AJAX
+        document.addEventListener('submit', async (e) => {
+            const form = e.target;
+            const isCartPost = form.action && (form.action.endsWith('/cart') || form.action.includes('/cart?')) && form.method.toLowerCase() === 'post';
+            
+            // We only intercept if it's not a coupon form, or we can handle coupon too!
+            if (isCartPost && !form.querySelector('input[name="code"]') && !form.querySelector('input[name="_method"][value="DELETE"]')) {
+                e.preventDefault();
+                this.loadingCart = true;
+                this.cartOpen = true; // Open the drawer immediately to show activity
+                
+                try {
+                    const formData = new FormData(form);
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.cartHtml = data.html;
+                        
+                        // Update cart counter badges
+                        const count = data.cart.items.reduce((sum, item) => sum + parseInt(item.quantity), 0);
+                        const counterEl = document.getElementById('cart-counter-display');
+                        const counterElMobile = document.getElementById('cart-counter-display-mobile');
+                        if (counterEl) counterEl.textContent = count;
+                        if (counterElMobile) counterElMobile.textContent = count;
+                    }
+                } catch (err) {
+                    console.error('Error adding product to cart:', err);
+                } finally {
+                    this.loadingCart = false;
+                }
+            }
+        });
+
+        // Initialize cart drawer HTML
+        this.refreshCartDrawer();
+    },
+
+    async refreshCartDrawer() {
+        this.loadingCart = true;
+        try {
+            const response = await fetch('/cart', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.cartHtml = data.html;
+            }
+        } catch (err) {
+            console.error('Error refreshing cart:', err);
+        } finally {
+            this.loadingCart = false;
+        }
+    },
+
+    async updateQuantity(itemId, quantity) {
+        if (quantity < 1) return;
+        this.loadingCart = true;
+        try {
+            const response = await fetch(`/cart/items/${itemId}`, {
+                method: 'POST',
+                body: JSON.stringify({ _method: 'PATCH', quantity }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.cartHtml = data.html;
+                
+                const count = data.cart.items.reduce((sum, item) => sum + parseInt(item.quantity), 0);
+                const counterEl = document.getElementById('cart-counter-display');
+                const counterElMobile = document.getElementById('cart-counter-display-mobile');
+                if (counterEl) counterEl.textContent = count;
+                if (counterElMobile) counterElMobile.textContent = count;
+            }
+        } catch (err) {
+            console.error('Error updating quantity:', err);
+        } finally {
+            this.loadingCart = false;
+        }
+    },
+
+    async removeCartItem(itemId) {
+        this.loadingCart = true;
+        try {
+            const response = await fetch(`/cart/items/${itemId}`, {
+                method: 'POST',
+                body: JSON.stringify({ _method: 'DELETE' }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.cartHtml = data.html;
+                
+                const count = data.cart.items.reduce((sum, item) => sum + parseInt(item.quantity), 0);
+                const counterEl = document.getElementById('cart-counter-display');
+                const counterElMobile = document.getElementById('cart-counter-display-mobile');
+                if (counterEl) counterEl.textContent = count;
+                if (counterElMobile) counterElMobile.textContent = count;
+            }
+        } catch (err) {
+            console.error('Error removing item:', err);
+        } finally {
+            this.loadingCart = false;
+        }
+    },
+
+    async applyCouponCode(code) {
+        if (!code) return;
+        this.loadingCart = true;
+        try {
+            const response = await fetch('/cart/coupon', {
+                method: 'POST',
+                body: JSON.stringify({ code }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                this.cartHtml = data.html;
+            } else {
+                alert(data.message || (data.errors && data.errors.coupon ? data.errors.coupon[0] : 'Failed to apply coupon'));
+            }
+        } catch (err) {
+            console.error('Error applying coupon:', err);
+        } finally {
+            this.loadingCart = false;
+        }
+    },
+
+    async removeCouponCode() {
+        this.loadingCart = true;
+        try {
+            const response = await fetch('/cart/coupon', {
+                method: 'POST',
+                body: JSON.stringify({ _method: 'DELETE' }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.cartHtml = data.html;
+            }
+        } catch (err) {
+            console.error('Error removing coupon:', err);
+        } finally {
+            this.loadingCart = false;
+        }
+    }
 }));
 
 Alpine.data('productDetail', (variants = []) => ({

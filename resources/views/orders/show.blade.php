@@ -18,11 +18,20 @@
             </div>
             <aside class="panel p-8">
                 <div class="space-y-3 text-sm text-stone-600">
-                    <div class="flex justify-between"><span>Status</span><span>{{ $order->status }}</span></div>
-                    <div class="flex justify-between"><span>Payment</span><span>{{ $order->payment_status }}</span></div>
-                    <div class="flex justify-between"><span>Total</span><span>{{ $order->formatted_total }}</span></div>
+                    <div class="flex justify-between"><span>Status</span><span class="font-semibold text-stone-900">{{ strtoupper($order->status) }}</span></div>
+                    <div class="flex justify-between"><span>Payment</span><span class="font-semibold text-stone-900">{{ strtoupper($order->payment_status) }}</span></div>
+                    <div class="h-px bg-stone-200 my-2"></div>
+                    <div class="flex justify-between"><span>Subtotal</span><span class="font-semibold text-stone-900">Rs. {{ number_format($order->subtotal, 0) }}</span></div>
+                    @if ($order->discount > 0)
+                        <div class="flex justify-between"><span>Discount</span><span class="font-semibold text-red-600">- Rs. {{ number_format($order->discount, 0) }}</span></div>
+                    @endif
+                    <div class="flex justify-between"><span>Shipping</span><span class="font-semibold text-stone-900">Rs. {{ number_format($order->shipping_charge, 0) }}</span></div>
+                    @if ($order->tax > 0)
+                        <div class="flex justify-between"><span>Tax (3% GST)</span><span class="font-semibold text-stone-900">Rs. {{ number_format($order->tax, 0) }}</span></div>
+                    @endif
+                    <div class="flex justify-between border-t border-stone-200 pt-3 font-semibold text-stone-950 text-base"><span>Total</span><span class="text-amber-800 text-lg">{{ $order->formatted_total }}</span></div>
                 </div>
-                <a href="{{ route('orders.invoice', $order) }}" class="btn-primary mt-8 w-full">Download Invoice</a>
+                <a href="{{ route('orders.invoice', $order) }}" class="btn-primary mt-8 w-full block text-center text-sm font-semibold uppercase tracking-widest">Download Invoice</a>
             </aside>
         </div>
     </section>

@@ -64,6 +64,15 @@
         transform-origin: left;
     }
 
+    .nav-link-active {
+        @apply text-amber-700 font-semibold;
+    }
+
+    .nav-link-active::after {
+        transform: scaleX(1) !important;
+        transform-origin: left !important;
+    }
+
     .badge-soft {
         @apply inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-700;
     }
@@ -184,5 +193,88 @@
     .hover-lift:hover {
         transform: translateY(-6px);
         box-shadow: 0 24px 60px -36px rgba(41, 37, 36, 0.4);
+    }
+
+    /* Cart Drawer Sliding classes */
+    .cart-drawer-overlay {
+        background-color: rgba(28, 25, 23, 0.45);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Diya / festive breathing glow */
+    @keyframes diyaGlow {
+        0%, 100% {
+            filter: drop-shadow(0 0 4px rgba(212, 153, 30, 0.4)) drop-shadow(0 0 10px rgba(212, 153, 30, 0.2));
+            transform: scale(1);
+        }
+        50% {
+            filter: drop-shadow(0 0 8px rgba(212, 153, 30, 0.7)) drop-shadow(0 0 20px rgba(212, 153, 30, 0.4));
+            transform: scale(1.05);
+        }
+    }
+
+    .diya-glow {
+        animation: diyaGlow 3s ease-in-out infinite;
+    }
+
+    /* Sparkles / particle background animation */
+    @keyframes floatParticle {
+        0% {
+            transform: translateY(100vh) translateX(0) scale(0.8);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.6;
+        }
+        90% {
+            opacity: 0.6;
+        }
+        100% {
+            transform: translateY(-10vh) translateX(50px) scale(1.2);
+            opacity: 0;
+        }
+    }
+
+    .festive-particle {
+        position: absolute;
+        pointer-events: none;
+        background: radial-gradient(circle, rgba(253, 224, 71, 0.8) 0%, rgba(212, 153, 30, 0) 70%);
+        border-radius: 50%;
+        animation: floatParticle 8s linear infinite;
+    }
+
+    /* Spin Wheel Visuals */
+    .spin-wheel-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    @keyframes pulseGold {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(212, 153, 30, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 15px rgba(212, 153, 30, 0);
+        }
+    }
+
+    .pulse-gold-btn {
+        animation: pulseGold 2s infinite;
+    }
+
+    /* Custom premium scrollbar for cart drawer */
+    .premium-scrollbar::-webkit-scrollbar {
+        width: 5px;
+    }
+    .premium-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .premium-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(28, 25, 23, 0.15);
+        border-radius: 10px;
+    }
+    .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(28, 25, 23, 0.3);
     }
 }

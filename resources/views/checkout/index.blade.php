@@ -1,5 +1,24 @@
 <x-layouts.app>
     <section class="container-shell py-10 sm:py-12">
+        @if ($spinCoupon && (!$coupon || $coupon->code !== $spinCoupon->code))
+            <div class="mb-8 p-5 rounded-[2rem] border border-amber-200 bg-amber-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🎁</span>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-900 font-serif">Unused Spin Wheel Discount Available!</p>
+                        <p class="text-xs text-stone-600 mt-0.5">Apply your code <strong class="font-mono bg-white px-2 py-0.5 rounded border border-amber-200 text-amber-800">{{ $spinCoupon->code }}</strong> to get <strong class="font-bold text-amber-700">{{ $spinCoupon->spin_reward_label }}</strong> on this order.</p>
+                    </div>
+                </div>
+                <form action="{{ route('cart.coupon.apply') }}" method="POST" class="w-full sm:w-auto">
+                    @csrf
+                    <input type="hidden" name="code" value="{{ $spinCoupon->code }}">
+                    <button type="submit" class="w-full sm:w-auto rounded-full bg-amber-700 hover:bg-stone-950 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition duration-300">
+                        Apply Coupon
+                    </button>
+                </form>
+            </div>
+        @endif
+
         <div class="grid gap-8 lg:grid-cols-[1fr,360px]">
             <form action="{{ route('checkout.store') }}" method="POST" class="panel p-6 sm:p-8" x-data="{
                 copyBilling: true,
@@ -28,7 +47,8 @@
             ">
                 @csrf
                 <p class="section-kicker">Checkout</p>
-                <h1 class="mt-4 text-2xl font-semibold text-stone-950 sm:text-3xl">Shipping and billing details</h1>
+                <h1 class="mt-4 text-2xl font-semibold text-stone-950 sm:text-3xl">Shipping details</h1>
+
 
                 @if ($errors->any())
                     <div class="mt-6 rounded-xl bg-red-50 p-4 border border-red-200">
@@ -84,64 +104,17 @@
                         </div>
                     </div>
 
-                    {{-- Billing Address --}}
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-3 py-2 border-b border-stone-100">
-                            <input type="checkbox" id="copy-billing" x-model="copyBilling" class="h-4 w-4 rounded border-stone-300 text-amber-700 focus:ring-amber-500">
-                            <label for="copy-billing" class="text-sm font-semibold text-stone-700 select-none">Billing same as shipping</label>
-                        </div>
-
-                        <div class="space-y-4" x-show="!copyBilling" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
-                            <h2 class="text-xl font-semibold text-stone-950">Billing Address</h2>
-                            <div>
-                                <input name="billing_name" x-model="billing_name" class="input" placeholder="Full name">
-                                @error('billing_name')
-                                    <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div>
-                                <input name="billing_phone" x-model="billing_phone" class="input" placeholder="Phone number">
-                                @error('billing_phone')
-                                    <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div>
-                                <textarea name="billing_address" x-model="billing_address" rows="3" class="input" placeholder="Address"></textarea>
-                                @error('billing_address')
-                                    <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <input name="billing_city" x-model="billing_city" class="input" placeholder="City">
-                                    @error('billing_city')
-                                        <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <input name="billing_state" x-model="billing_state" class="input" placeholder="State">
-                                    @error('billing_state')
-                                        <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div>
-                                <input name="billing_pincode" x-model="billing_pincode" class="input" placeholder="Pincode">
-                                @error('billing_pincode')
-                                    <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="p-6 rounded-[1.5rem] bg-stone-50 border border-stone-150 space-y-2" x-show="copyBilling" x-transition>
-                            <p class="text-xs text-stone-500 font-semibold uppercase tracking-wider">Billing details snapshot</p>
-                            <p class="text-sm font-medium text-stone-800" x-text="shipping_name || 'No name entered'"></p>
-                            <p class="text-sm text-stone-600" x-text="shipping_phone || 'No phone number entered'"></p>
-                            <p class="text-sm text-stone-600" x-text="shipping_address || 'No address entered'"></p>
-                            <p class="text-sm text-stone-600" x-text="(shipping_city || '') + (shipping_state ? ', ' + shipping_state : '') + (shipping_pincode ? ' - ' + shipping_pincode : '')"></p>
-                        </div>
+                    {{-- Hidden Billing fields (billing = shipping) --}}
+                    <div>
+                        <input type="hidden" name="billing_name" :value="shipping_name">
+                        <input type="hidden" name="billing_phone" :value="shipping_phone">
+                        <input type="hidden" name="billing_address" :value="shipping_address">
+                        <input type="hidden" name="billing_city" :value="shipping_city">
+                        <input type="hidden" name="billing_state" :value="shipping_state">
+                        <input type="hidden" name="billing_pincode" :value="shipping_pincode">
                     </div>
                 </div>
+
 
                 <div class="mt-8 border-t border-stone-100 pt-6">
                     <label class="label">Order notes (Optional)</label>
@@ -167,6 +140,9 @@
                     <div class="flex justify-between"><span>Subtotal</span><span class="font-semibold text-stone-900">Rs. {{ number_format($totals['subtotal'], 0) }}</span></div>
                     <div class="flex justify-between"><span>Discount</span><span class="font-semibold text-red-600">- Rs. {{ number_format($totals['discount'], 0) }}</span></div>
                     <div class="flex justify-between"><span>Shipping</span><span class="font-semibold text-stone-900">Rs. {{ number_format($totals['shipping'], 0) }}</span></div>
+                    @if (($totals['tax'] ?? 0) > 0)
+                        <div class="flex justify-between"><span>Tax (3% GST)</span><span class="font-semibold text-stone-900">Rs. {{ number_format($totals['tax'], 0) }}</span></div>
+                    @endif
                     <div class="flex justify-between border-t border-stone-100 pt-3 font-semibold text-stone-950 text-base"><span>Total</span><span class="text-amber-800 text-lg">Rs. {{ number_format($totals['total'], 0) }}</span></div>
                 </div>
             </aside>

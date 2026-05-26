@@ -26,6 +26,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->flash('just_logged_in', true);
 
         return redirect()->intended(route('account.dashboard'));
     }
@@ -48,6 +49,7 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->flash('just_logged_in', true);
 
         return redirect()->route('account.dashboard');
     }

@@ -185,4 +185,29 @@ class ShopController extends Controller
     {
         return view('shop.contact');
     }
+
+    public function contactStore(\Illuminate\Http\Request $request)
+    {
+        $data = $request->validate([
+            'name'    => ['required', 'string', 'max:255'],
+            'email'   => ['required', 'email', 'max:255'],
+            'phone'   => ['nullable', 'string', 'max:20'],
+            'message' => ['required', 'string', 'min:10', 'max:3000'],
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to('mistryvaidehi263@gmail.com')
+                ->send(new \App\Mail\ContactInquiryMail(
+                    senderName:    $data['name'],
+                    senderEmail:   $data['email'],
+                    senderPhone:   $data['phone'] ?? '',
+                    senderMessage: $data['message'],
+                ));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Contact mail failed: ' . $e->getMessage());
+        }
+
+        return redirect()->route('shop.contact')
+            ->with('success', 'Thank you, ' . $data['name'] . '! Your message has been sent. We\'ll get back to you soon.');
+    }
 }

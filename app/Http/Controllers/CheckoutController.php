@@ -23,12 +23,27 @@ class CheckoutController extends Controller
     {
         $cart = $this->cartService->current($request);
         abort_if($cart->items->isEmpty(), 404);
-
+ 
         $coupon = $this->cartService->couponFromSession($request);
         $totals = $this->cartService->totals($cart, $coupon);
         $addresses = $request->user()->addresses()->latest()->get();
-
-        return view('checkout.index', compact('cart', 'coupon', 'totals', 'addresses'));
+ 
+        // Query active spin coupon for this session or user
+        $spinCoupon = null;
+        $spinResult = \App\Models\SpinWheelResult::where('session_id', $request->session()->getId())
+            ->when(auth()->check(), fn($q) => $q->orWhere('user_id', auth()->id()))
+            ->whereNotNull('coupon_code')
+            ->latest()
+            ->first();
+ 
+        if ($spinResult) {
+            $spinCoupon = \App\Models\Coupon::where('code', $spinResult->coupon_code)
+                ->where('is_active', true)
+                ->where('used_count', 0)
+                ->first();
+        }
+ 
+        return view('checkout.index', compact('cart', 'coupon', 'totals', 'addresses', 'spinCoupon'));
     }
 
     public function store(Request $request)
@@ -145,15 +160,41 @@ class CheckoutController extends Controller
 
         $this->cartService->clear($request);
 
-        // Send email notification on order completion if not already sent
-        $order->load(['items.product', 'user']);
-        if (!$order->email_sent) {
+        // Send email notification on order completion
+        // Important: only mark email_sent=true AFTER a successful send.
+        $order = $order->fresh(['items.product', 'user']);
+
+        // Always attempt if email was not sent.
+        if (! $order->email_sent) {
             try {
-                \Illuminate\Support\Facades\Mail::to('mistryvaidehi263@gmail.com')->send(new \App\Mail\OrderCompletedMail($order));
+                \Illuminate\Support\Facades\Log::info('Sending order email', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'recipient' => 'mistryvaidehi263@gmail.com',
+                ]);
+
+                \Illuminate\Support\Facades\Mail::to('mistryvaidehi263@gmail.com')
+                    ->send(new \App\Mail\OrderCompletedMail($order));
+
                 $order->update(['email_sent' => true]);
+
+                \Illuminate\Support\Facades\Log::info('Order email sent', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                ]);
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Order email failed: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Order email failed', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'recipient' => 'mistryvaidehi263@gmail.com',
+                    'error' => $e->getMessage(),
+                ]);
             }
+        } else {
+            \Illuminate\Support\Facades\Log::info('Order email already marked as sent - skipping', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+            ]);
         }
 
         return view('checkout.success', compact('order'));

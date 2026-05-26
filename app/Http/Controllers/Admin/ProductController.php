@@ -184,4 +184,27 @@ class ProductController extends Controller
             ]);
         }
     }
+
+    public function deletePrimaryImage(Product $product)
+    {
+        $primaryImage = $product->primaryImage;
+        if ($primaryImage) {
+            if ($primaryImage->image_path) {
+                Storage::disk('public')->delete($primaryImage->image_path);
+            }
+            $primaryImage->delete();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteGalleryImage(ProductImage $image)
+    {
+        if ($image->image_path) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+        $image->delete();
+
+        return response()->json(['success' => true]);
+    }
 }
