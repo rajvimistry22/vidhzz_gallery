@@ -19,7 +19,7 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        if ($this->image_path && file_exists(public_path('storage/' . $this->image_path))) {
+        if ($this->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->image_path)) {
             return asset('storage/' . $this->image_path);
         }
 

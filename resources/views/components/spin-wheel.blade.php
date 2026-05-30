@@ -117,7 +117,7 @@
         <div class="flex flex-col justify-center text-center lg:text-left">
             <template x-if="state === 'intro'">
                 <div>
-                    <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-700">Festive Gift</span>
+                    <span cltisan serveass="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-700">Festive Gift</span>
                     <h2 class="mt-4 text-3xl font-semibold leading-tight text-stone-950 sm:text-4xl">Spin & Win Up to 20% Off!</h2>
                     <p class="mt-4 text-sm leading-relaxed text-stone-600">Try your luck today! Unlock exclusive discount codes and free shipping for your Navratri or Bangles collection favorites.</p>
                     

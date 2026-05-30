@@ -64,6 +64,14 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('storage-link', function () {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('storage:link');
+            return redirect()->route('admin.dashboard')->with('success', 'Storage symbolic link created successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.dashboard')->with('error', 'Failed to create storage link: ' . $e->getMessage());
+        }
+    })->name('storage-link');
     Route::resource('categories', AdminCategoryController::class)->except('show');
     Route::post('categories/{category}/delete-image', [AdminCategoryController::class, 'deleteImage'])->name('categories.delete-image');
     Route::post('categories/{category}/delete-banner', [AdminCategoryController::class, 'deleteBanner'])->name('categories.delete-banner');
@@ -81,3 +89,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('banners', AdminBannerController::class)->except('show');
     Route::get('spin-wheel', [AdminSpinWheelController::class, 'index'])->name('spin-wheel.index');
 });
+
+// Fallback route to serve uploaded storage files when public/storage symlink is missing or broken (e.g. on live shared hosting)
+Route::get('storage/{path}', function ($path) {
+    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+    return \Illuminate\Support\Facades\Storage::disk('public')->response($path);
+})->where('path', '.*');
+

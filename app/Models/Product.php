@@ -106,7 +106,7 @@ class Product extends Model
     {
         $image = $this->images->where('is_primary', true)->first() ?? $this->images->first();
 
-        if ($image && file_exists(public_path('storage/' . $image->image_path))) {
+        if ($image && \Illuminate\Support\Facades\Storage::disk('public')->exists($image->image_path)) {
             return asset('storage/' . $image->image_path);
         }
 

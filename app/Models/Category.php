@@ -46,7 +46,7 @@ class Category extends Model
             return $galleryImage->url;
         }
 
-        if ($this->image && file_exists(public_path('storage/' . $this->image))) {
+        if ($this->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->image)) {
             return asset('storage/' . $this->image);
         }
 
@@ -55,7 +55,7 @@ class Category extends Model
 
     public function getBannerUrlAttribute(): string
     {
-        if ($this->banner_image && file_exists(public_path('storage/' . $this->banner_image))) {
+        if ($this->banner_image && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->banner_image)) {
             return asset('storage/' . $this->banner_image);
         }
 

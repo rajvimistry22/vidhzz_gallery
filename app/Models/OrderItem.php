@@ -41,7 +41,7 @@ class OrderItem extends Model
 
     public function getProductImageUrlAttribute(): string
     {
-        if ($this->product_image && file_exists(public_path('storage/' . $this->product_image))) {
+        if ($this->product_image && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->product_image)) {
             return asset('storage/' . $this->product_image);
         }
 
